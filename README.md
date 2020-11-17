@@ -1,4 +1,4 @@
-> GitHub README.md 无法加载 `MathJax` 数学公式，可以通过安装[浏览器插件](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)解决。
+> **GitHub [README.md](https://github.com/Singularity0909/templates/blob/main/README.md)** 无法加载 **MathJax** 数学公式，可以通过安装[浏览器插件](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima/related)解决。
 
 ## IO 及其他
 
