@@ -2709,28 +2709,63 @@ int main()
 
 using namespace std;
 using ll = long long;
+using p = pair<int, int>;
 const int maxn(5e5 + 10);
-int n, m, tree[maxn];
+int c[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
 
 inline int lowbit(int x)
 {
     return x & -x;
 }
 
-void update(int p, int v)
+void update(int p, int n, int v)
 {
     for (int i = p; i <= n; i += lowbit(i)) {
-        tree[i] += v;
+        c[i] += v;
     }
 }
 
 ll getSum(int p)
 {
     ll sum = 0;
-    for (int i = p; i; i -= lowbit(i)) {
-        sum += tree[i];
+    while (p) {
+        sum += c[p];
+        p -= lowbit(p);
     }
     return sum;
+}
+
+ll query(int l, int r)
+{
+    return getSum(r) - getSum(l - 1);
 }
 
 int main()
@@ -2740,19 +2775,206 @@ int main()
     freopen("input.txt", "r", stdin);
 #endif
     ios::sync_with_stdio(false);
-    cin >> n >> m;
+    int n = read(), m = read();
     for (int i = 1; i <= n; ++i) {
-        int x;
-        cin >> x;
-        update(i, x);
+        update(i, n, read());
     }
     while (m--) {
-        int op, x, y;
-        cin >> op >> x >> y;
+        int op = read(), a = read(), b = read();
         if (op == 1) {
-            update(x, y);
+            update(a, n, b);
         } else {
-            cout << getSum(y) - getSum(x - 1) << endl;
+            write(query(a, b), true);
+        }
+    }
+    return 0;
+}
+```
+
+[洛谷 P3368 【模板】树状数组 2](https://www.luogu.com.cn/problem/P3368)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(5e5 + 10);
+int c[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int lowbit(int x)
+{
+    return x & -x;
+}
+
+void update(int p, int n, int v)
+{
+    for (int i = p; i <= n; i += lowbit(i)) {
+        c[i] += v;
+    }
+}
+
+ll getSum(int p)
+{
+    ll sum = 0;
+    while (p) {
+        sum += c[p];
+        p -= lowbit(p);
+    }
+    return sum;
+}
+
+ll query(int l, int r)
+{
+    return getSum(r) - getSum(l - 1);
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    ios::sync_with_stdio(false);
+    int n = read(), m = read();
+    for (int i = 1; i <= n; ++i) {
+        update(i, n, read());
+    }
+    while (m--) {
+        int op = read(), a = read(), b = read();
+        if (op == 1) {
+            update(a, n, b);
+        } else {
+            write(query(a, b), true);
+        }
+    }
+    return 0;
+}
+```
+
+[洛谷 P3372 【模板】线段树 1](https://www.luogu.com.cn/problem/P3372)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e5 + 10);
+int a[maxn];
+ll c[maxn][2];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int lowbit(int x)
+{
+    return x & -x;
+}
+
+void add(int t, int p, int n, ll v)
+{
+    for (int i = p; i <= n; i += lowbit(i)) {
+        c[i][t] += v;
+    }
+}
+
+ll getSum(int t, int p)
+{
+    ll sum = 0;
+    for (int i = p; i; i -= lowbit(i)) {
+        sum += c[i][t];
+    }
+    return sum;
+}
+
+void update(int l, int r, int n, int v)
+{
+    add(0, l, n, v);
+    add(0, r + 1, n, -v);
+    add(1, l, n, 1ll * v * (l - 1));
+    add(1, r + 1, n, -1ll * v * r);
+}
+
+ll query(int l, int r)
+{
+    ll sum_r = 1ll * r * getSum(0, r) - getSum(1, r);
+    ll sum_l = 1ll * (l - 1) * getSum(0, l - 1) - getSum(1, l - 1);
+    return sum_r - sum_l;
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read();
+    for (int i = 1; i <= n; ++i) {
+        a[i] = read();
+        add(0, i, n, a[i] - a[i - 1]);
+        add(1, i, n, 1ll * (a[i] - a[i - 1]) * (i - 1));
+    }
+    while (m--) {
+        int op = read(), x = read(), y = read();
+        if (op == 1) {
+            int k = read();
+            update(x, y, n, k);
+        } else {
+            write(query(x, y), true);
         }
     }
     return 0;
