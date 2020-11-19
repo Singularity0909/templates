@@ -3234,3 +3234,218 @@ int main()
     return 0;
 }
 ```
+
+#### Treap
+
+[洛谷 P3369 【模板】普通平衡树](https://www.luogu.com.cn/problem/P3369)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e5 + 10);
+const int inf(0x3f3f3f3f);
+int idx, root;
+
+struct node {
+    int l, r;
+    int key, val;
+    int cnt, siz;
+} tree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int new_node(int key)
+{
+    ++idx;
+    tree[idx].key = key;
+    tree[idx].val = rand();
+    tree[idx].cnt = tree[idx].siz = 1;
+    return idx;
+}
+
+inline void push_up(int cur)
+{
+    tree[cur].siz = tree[tree[cur].l].siz + tree[tree[cur].r].siz + tree[cur].cnt;
+}
+
+inline void zig(int& cur)
+{
+    int ls = tree[cur].l;
+    tree[cur].l = tree[ls].r;
+    tree[ls].r = cur;
+    cur = ls;
+    push_up(tree[cur].r);
+    push_up(cur);
+}
+
+inline void zag(int& cur)
+{
+    int rs = tree[cur].r;
+    tree[cur].r = tree[rs].l;
+    tree[rs].l = cur;
+    cur = rs;
+    push_up(tree[cur].l);
+    push_up(cur);
+}
+
+void build()
+{
+    root = new_node(-inf);
+    tree[root].r = new_node(inf);
+    push_up(root);
+    if (tree[root].val < tree[tree[root].r].val) {
+        zag(root);
+    }
+}
+
+inline void insert(int& cur, int key)
+{
+    if (not cur) {
+        cur = new_node(key);
+    } else if (key == tree[cur].key) {
+        ++tree[cur].cnt;
+    } else if (key < tree[cur].key) {
+        insert(tree[cur].l, key);
+        if (tree[tree[cur].l].val > tree[cur].val) {
+            zig(cur);
+        }
+    } else {
+        insert(tree[cur].r, key);
+        if (tree[tree[cur].r].val > tree[cur].val) {
+            zag(cur);
+        }
+    }
+    push_up(cur);
+}
+
+inline void remove(int& cur, int key)
+{
+    if (not cur) return;
+    if (key == tree[cur].key) {
+        if (tree[cur].cnt > 1) {
+            --tree[cur].cnt;
+        } else if (tree[cur].l or tree[cur].r) {
+            if (not tree[cur].r or tree[tree[cur].l].val > tree[tree[cur].r].val) {
+                zig(cur);
+                remove(tree[cur].r, key);
+            } else {
+                zag(cur);
+                remove(tree[cur].l, key);
+            }
+        } else {
+            cur = 0;
+        }
+    } else if (key < tree[cur].key) {
+        remove(tree[cur].l, key);
+    } else {
+        remove(tree[cur].r, key);
+    }
+    push_up(cur);
+}
+
+inline int get_rank(int cur, int key)
+{
+    if (not cur) {
+        return 0;
+    }
+    if (key == tree[cur].key) {
+        return tree[tree[cur].l].siz + 1;
+    }
+    if (key < tree[cur].key) {
+        return get_rank(tree[cur].l, key);
+    }
+    return get_rank(tree[cur].r, key) + tree[tree[cur].l].siz + tree[cur].cnt;
+}
+
+inline int get_key(int cur, int rank)
+{
+    if (not cur) {
+        return inf;
+    }
+    if (rank <= tree[tree[cur].l].siz) {
+        return get_key(tree[cur].l, rank);
+    }
+    if (rank <= tree[tree[cur].l].siz + tree[cur].cnt) {
+        return tree[cur].key;
+    }
+    return get_key(tree[cur].r, rank - tree[cur].cnt - tree[tree[cur].l].siz);
+}
+
+inline int get_prev(int cur, int key)
+{
+    if (not cur) {
+        return -inf;
+    }
+    if (key <= tree[cur].key) {
+        return get_prev(tree[cur].l, key);
+    }
+    return max(tree[cur].key, get_prev(tree[cur].r, key));
+}
+
+inline int get_next(int cur, int key)
+{
+    if (not cur) {
+        return inf;
+    }
+    if (key >= tree[cur].key) {
+        return get_next(tree[cur].r, key);
+    }
+    return min(tree[cur].key, get_next(tree[cur].l, key));
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    build();
+    int n = read();
+    while (n--) {
+        int op = read(), x = read();
+        if (op == 1) {
+            insert(root, x);
+        } else if (op == 2) {
+            remove(root, x);
+        } else if (op == 3) {
+            write(get_rank(root, x) - 1, true);
+        } else if (op == 4) {
+            write(get_key(root, x + 1), true);
+        } else if (op == 5) {
+            write(get_prev(root, x), true);
+        } else {
+            write(get_next(root, x), true);
+        }
+    }
+    return 0;
+}
+```
