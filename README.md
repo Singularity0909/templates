@@ -3449,3 +3449,180 @@ int main()
     return 0;
 }
 ```
+
+#### fhq Treap
+
+[洛谷 P3369 【模板】普通平衡树](https://www.luogu.com.cn/problem/P3369)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int inf(0x3f3f3f3f);
+const int maxn(1e5 + 10);
+int idx, root;
+int x, y, z;
+
+struct node {
+    int l, r;
+    int key, val;
+    int siz;
+} tree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int new_node(int key)
+{
+    ++idx;
+    tree[idx].key = key;
+    tree[idx].val = rand();
+    tree[idx].siz = 1;
+    return idx;
+}
+
+inline void push_up(int cur)
+{
+    tree[cur].siz = tree[tree[cur].l].siz + tree[tree[cur].r].siz + 1;
+}
+
+inline void split(int cur, int key, int& x, int& y)
+{
+    if (not cur) {
+        x = y = 0;
+    } else if (tree[cur].key <= key) {
+        x = cur;
+        split(tree[cur].r, key, tree[cur].r, y);
+        push_up(cur);
+    } else {
+        y = cur;
+        split(tree[cur].l, key, x, tree[cur].l);
+        push_up(cur);
+    }
+}
+
+inline int merge(int x, int y)
+{
+    if (not x or not y) {
+        return x + y;
+    }
+    if (tree[x].val > tree[y].val) {
+        tree[x].r = merge(tree[x].r, y);
+        push_up(x);
+        return x;
+    }
+    tree[y].l = merge(x, tree[y].l);
+    push_up(y);
+    return y;
+}
+
+inline void insert(int key)
+{
+    split(root, key, x, y);
+    root = merge(merge(x, new_node(key)), y);
+}
+
+inline void remove(int key)
+{
+    split(root, key, x, z);
+    split(x, key - 1, x, y);
+    y = merge(tree[y].l, tree[y].r);
+    root = merge(merge(x, y), z);
+}
+
+inline int get_rank(int key)
+{
+    split(root, key - 1, x, y);
+    int res = tree[x].siz + 1;
+    root = merge(x, y);
+    return res;
+}
+
+inline int get_key(int cur, int rank)
+{
+    if (rank == tree[tree[cur].l].siz + 1) {
+        return tree[cur].key;
+    }
+    if (rank <= tree[tree[cur].l].siz) {
+        return get_key(tree[cur].l, rank);
+    }
+    return get_key(tree[cur].r, rank - tree[tree[cur].l].siz - 1);
+}
+
+inline int get_prev(int key)
+{
+    split(root, key - 1, x, y);
+    int cur = x;
+    while (tree[cur].r) {
+        cur = tree[cur].r;
+    }
+    int res = tree[cur].key;
+    root = merge(x, y);
+    return res;
+}
+
+inline int get_next(int key)
+{
+    split(root, key, x, y);
+    int cur = y;
+    while (tree[cur].l) {
+        cur = tree[cur].l;
+    }
+    int res = tree[cur].key;
+    root = merge(x, y);
+    return res;
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read();
+    while (n--) {
+        int op = read(), x = read();
+        if (op == 1) {
+            insert(x);
+        } else if (op == 2) {
+            remove(x);
+        } else if (op == 3) {
+            write(get_rank(x), true);
+        } else if (op == 4) {
+            write(get_key(root, x), true);
+        } else if (op == 5) {
+            write(get_prev(x), true);
+        } else {
+            write(get_next(x), true);
+        }
+    }
+    return 0;
+}
+```
