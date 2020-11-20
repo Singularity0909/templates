@@ -3626,3 +3626,146 @@ int main()
     return 0;
 }
 ```
+
+[洛谷 P3391 【模板】文艺平衡树](https://www.luogu.com.cn/problem/P3391)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const double pi(acos(-1));
+const int inf(0x3f3f3f3f);
+const int maxn(1e5 + 10);
+int idx, root;
+
+struct node {
+    int l, r;
+    int key, val;
+    int siz;
+    bool rev;
+} tree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, char c)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (c) putchar(c);
+}
+
+inline int new_node(int key)
+{
+    ++idx;
+    tree[idx].key = key;
+    tree[idx].val = rand();
+    tree[idx].siz = 1;
+    return idx;
+}
+
+inline void push_up(int cur)
+{
+    tree[cur].siz = tree[tree[cur].l].siz + tree[tree[cur].r].siz + 1;
+}
+
+inline void push_down(int cur)
+{
+    if (tree[cur].rev) {
+        swap(tree[cur].l, tree[cur].r);
+        tree[tree[cur].l].rev ^= 1;
+        tree[tree[cur].r].rev ^= 1;
+        tree[cur].rev = false;
+    }
+}
+
+inline void split(int cur, int siz, int& x, int& y)
+{
+    if (not cur) {
+        x = y = 0;
+    } else {
+        push_down(cur);
+        if (siz > tree[tree[cur].l].siz) {
+            x = cur;
+            split(tree[cur].r, siz - tree[tree[cur].l].siz - 1, tree[cur].r, y);
+        } else {
+            y = cur;
+            split(tree[cur].l, siz, x, tree[cur].l);
+        }
+        push_up(cur);
+    }
+}
+
+inline int merge(int x, int y)
+{
+    if (not x or not y) {
+        return x + y;
+    }
+    if (tree[x].val < tree[y].val) {
+        push_down(x);
+        tree[x].r = merge(tree[x].r, y);
+        push_up(x);
+        return x;
+    }
+    push_down(y);
+    tree[y].l = merge(x, tree[y].l);
+    push_up(y);
+    return y;
+}
+
+inline void reverse(int l, int r)
+{
+    int x, y, z;
+    split(root, l - 1, x, y);
+    split(y, r - l + 1, y, z);
+    tree[y].rev ^= 1;
+    root = merge(merge(x, y), z);
+}
+
+void dfs(int cur)
+{
+    if (not cur) return;
+    push_down(cur);
+    dfs(tree[cur].l);
+    write(tree[cur].key, ' ');
+    dfs(tree[cur].r);
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read();
+    for (int i = 1; i <= n; ++i) {
+        root = merge(root, new_node(i));
+    }
+    while (m--) {
+        int l = read(), r = read();
+        reverse(l, r);
+    }
+    dfs(root);
+    return 0;
+}
+```
