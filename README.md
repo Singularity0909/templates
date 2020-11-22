@@ -3769,3 +3769,387 @@ int main()
     return 0;
 }
 ```
+
+#### Splay
+
+[洛谷 P3369 【模板】普通平衡树](https://www.luogu.com.cn/problem/P3369)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e5 + 10);
+int idx, root;
+
+struct node {
+    int val;
+    int siz, cnt;
+    int fa, ch[2];
+} tree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int new_node(int val)
+{
+    ++idx;
+    tree[idx].val = val;
+    tree[idx].siz = tree[idx].cnt = 1;
+    return idx;
+}
+
+inline bool get_rel(int cur, int fa)
+{
+    return tree[fa].ch[1] == cur;
+}
+
+inline void connect(int cur, int fa, int rel)
+{
+    tree[fa].ch[rel] = cur;
+    tree[cur].fa = fa;
+}
+
+inline void push_up(int cur)
+{
+    tree[cur].siz = tree[tree[cur].ch[0]].siz + tree[tree[cur].ch[1]].siz + tree[cur].cnt;
+}
+
+inline void rotate(int cur)
+{
+    int fa = tree[cur].fa;
+    int gf = tree[fa].fa;
+    bool rel = get_rel(cur, fa);
+    connect(tree[cur].ch[rel ^ 1], fa, rel);
+    connect(cur, gf, get_rel(fa, gf));
+    connect(fa, cur, rel ^ 1);
+    push_up(fa);
+    push_up(cur);
+}
+
+inline void splaying(int cur, int top)
+{
+    while (tree[cur].fa not_eq top) {
+        int fa = tree[cur].fa;
+        int gf = tree[fa].fa;
+        if (gf not_eq top) {
+            get_rel(cur, fa) ^ get_rel(fa, gf) ? rotate(cur) : rotate(fa);
+        }
+        rotate(cur);
+    }
+    if (not top) {
+        root = cur;
+    }
+}
+
+inline void insert(int val)
+{
+    int cur = root, fa = 0;
+    while (cur and tree[cur].val not_eq val) {
+        fa = cur;
+        cur = tree[cur].ch[val > tree[cur].val];
+    }
+    if (cur) {
+        ++tree[cur].cnt;
+        ++tree[cur].siz;
+    } else {
+        cur = new_node(val);
+        connect(cur, fa, val > tree[fa].val);
+    }
+    splaying(cur, 0);
+}
+
+inline void remove(int val)
+{
+    int cur = root, fa = 0;
+    while (tree[cur].val not_eq val) {
+        fa = cur;
+        cur = tree[cur].ch[val > tree[cur].val];
+    }
+    splaying(cur, 0);
+    if (tree[cur].cnt > 1) {
+        --tree[cur].cnt;
+        --tree[cur].siz;
+    } else if (tree[cur].ch[1]) {
+        int nxt = tree[cur].ch[1];
+        while (tree[nxt].ch[0]) {
+            nxt = tree[nxt].ch[0];
+        }
+        splaying(nxt, cur);
+        connect(tree[cur].ch[0], nxt, 0);
+        root = nxt;
+        tree[root].fa = 0;
+        push_up(root);
+    } else {
+        root = tree[cur].ch[0];
+        tree[root].fa = 0;
+    }
+}
+
+inline int get_rank(int val)
+{
+    int cur = root, rank = 1;
+    while (cur) {
+        if (tree[cur].val == val) {
+            rank += tree[tree[cur].ch[0]].siz;
+            splaying(cur, 0);
+            break;
+        } else if (val < tree[cur].val) {
+            cur = tree[cur].ch[0];
+        } else {
+            rank += tree[tree[cur].ch[0]].siz + tree[cur].cnt;
+            cur = tree[cur].ch[1];
+        }
+    }
+    return rank;
+}
+
+inline int get_val(int rank)
+{
+    int cur = root;
+    while (cur) {
+        int size_l = tree[tree[cur].ch[0]].siz;
+        if (size_l + 1 <= rank and rank <= size_l + tree[cur].cnt) {
+            splaying(cur, 0);
+            break;
+        } else if (size_l >= rank) {
+            cur = tree[cur].ch[0];
+        } else {
+            rank -= size_l + tree[cur].cnt;
+            cur = tree[cur].ch[1];
+        }
+    }
+    return tree[cur].val;
+}
+
+inline int get_prev(int val)
+{
+    return get_val(get_rank(val) - 1);
+}
+
+inline int get_next(int val)
+{
+    return get_val(get_rank(val + 1));
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read();
+    while (n--) {
+        int op = read(), x = read();
+        if (op == 1) {
+            insert(x);
+        } else if (op == 2) {
+            remove(x);
+        } else if (op == 3) {
+            write(get_rank(x), true);
+        } else if (op == 4) {
+            write(get_val(x), true);
+        } else if (op == 5) {
+            write(get_prev(x), true);
+        } else {
+            write(get_next(x), true);
+        }
+    }
+    return 0;
+}
+```
+
+[洛谷 P3391 【模板】文艺平衡树](https://www.luogu.com.cn/problem/P3391)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e5 + 10);
+int idx, root;
+
+struct node {
+    int val, siz;
+    int ch[2], fa;
+    bool rev;
+} tree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, char c)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (c) putchar(c);
+}
+
+inline int new_node(int val)
+{
+    ++idx;
+    tree[idx].val = val;
+    tree[idx].siz = 1;
+    return idx;
+}
+
+inline void push_up(int cur)
+{
+    tree[cur].siz = tree[tree[cur].ch[0]].siz + tree[tree[cur].ch[1]].siz + 1;
+}
+
+inline void push_down(int cur)
+{
+    if (tree[cur].rev) {
+        swap(tree[cur].ch[0], tree[cur].ch[1]);
+        tree[tree[cur].ch[0]].rev ^= 1;
+        tree[tree[cur].ch[1]].rev ^= 1;
+        tree[cur].rev = false;
+    }
+}
+
+inline bool get_rel(int cur, int fa)
+{
+    return tree[fa].ch[1] == cur;
+}
+
+inline void connect(int cur, int fa, bool rel)
+{
+    tree[fa].ch[rel] = cur;
+    tree[cur].fa = fa;
+}
+
+inline void rotate(int cur)
+{
+    int fa = tree[cur].fa;
+    int gf = tree[fa].fa;
+    bool rel = get_rel(cur, fa);
+    connect(tree[cur].ch[rel ^ 1], fa, rel);
+    connect(cur, gf, get_rel(fa, gf));
+    connect(fa, cur, rel ^ 1);
+    push_up(fa);
+    push_up(cur);
+}
+
+inline void splaying(int cur, int top)
+{
+    while (tree[cur].fa not_eq top) {
+        int fa = tree[cur].fa;
+        int gf = tree[fa].fa;
+        if (gf not_eq top) {
+            get_rel(cur, fa) ^ get_rel(fa, gf) ? rotate(cur) : rotate(fa);
+        }
+        rotate(cur);
+    }
+    if (not top) {
+        root = cur;
+    }
+}
+
+inline void insert(int val)
+{
+    int cur = root, fa = 0;
+    while (cur) {
+        fa = cur;
+        cur = tree[cur].ch[val > tree[cur].val];
+    }
+    cur = new_node(val);
+    connect(cur, fa, val > tree[fa].val);
+    splaying(cur, 0);
+}
+
+inline int get_val(int rank)
+{
+    int cur = root;
+    while (true) {
+        push_down(cur);
+        if (tree[tree[cur].ch[0]].siz >= rank) {
+            cur = tree[cur].ch[0];
+        } else if (tree[tree[cur].ch[0]].siz + 1 == rank) {
+            return cur;
+        } else {
+            rank -= tree[tree[cur].ch[0]].siz + 1;
+            cur = tree[cur].ch[1];
+        }
+    }
+    return -1;
+}
+
+void dfs(int cur, int n)
+{
+    if (not cur) return;
+    push_down(cur);
+    dfs(tree[cur].ch[0], n);
+    if (tree[cur].val >= 1 and tree[cur].val <= n) {
+        write(tree[cur].val, ' ');
+    }
+    dfs(tree[cur].ch[1], n);
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read();
+    for (int i = 0; i <= n + 1; ++i) {
+        insert(i);
+    }
+    while (m--) {
+        int l = read(), r = read();
+        int x = get_val(l), y = get_val(r + 2);
+        splaying(x, 0);
+        splaying(y, x);
+        tree[tree[y].ch[0]].rev ^= 1;
+    }
+    dfs(root, n);
+    return 0;
+}
+```
+
