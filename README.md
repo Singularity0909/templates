@@ -3998,7 +3998,7 @@ int idx, root;
 
 struct node {
     int val, siz;
-    int ch[2], fa;
+    int fa, ch[2];
     bool rev;
 } tree[maxn];
 
@@ -4053,7 +4053,7 @@ inline void push_down(int cur)
     }
 }
 
-inline bool get_rel(int cur, int fa)
+inline int get_rel(int cur, int fa)
 {
     return tree[fa].ch[1] == cur;
 }
@@ -4103,21 +4103,30 @@ inline void insert(int val)
     splaying(cur, 0);
 }
 
-inline int get_val(int rank)
+inline int get_id(int pos)
 {
     int cur = root;
-    while (true) {
+    while (cur) {
         push_down(cur);
-        if (tree[tree[cur].ch[0]].siz >= rank) {
+        if (tree[tree[cur].ch[0]].siz >= pos) {
             cur = tree[cur].ch[0];
-        } else if (tree[tree[cur].ch[0]].siz + 1 == rank) {
+        } else if (tree[tree[cur].ch[0]].siz + 1 == pos) {
             return cur;
         } else {
-            rank -= tree[tree[cur].ch[0]].siz + 1;
+            pos -= tree[tree[cur].ch[0]].siz + 1;
             cur = tree[cur].ch[1];
         }
     }
-    return -1;
+    return cur;
+}
+
+inline void reverse(int l, int r)
+{
+    int x = get_id(l - 1);
+    int y = get_id(r + 1);
+    splaying(x, 0);
+    splaying(y, x);
+    tree[tree[y].ch[0]].rev ^= 1;
 }
 
 void dfs(int cur, int n)
@@ -4142,11 +4151,8 @@ int main()
         insert(i);
     }
     while (m--) {
-        int l = read(), r = read();
-        int x = get_val(l), y = get_val(r + 2);
-        splaying(x, 0);
-        splaying(y, x);
-        tree[tree[y].ch[0]].rev ^= 1;
+        int l = read() + 1, r = read() + 1;
+        reverse(l, r);
     }
     dfs(root, n);
     return 0;
