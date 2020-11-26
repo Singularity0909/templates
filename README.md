@@ -4158,3 +4158,323 @@ int main()
     return 0;
 }
 ```
+
+#### 树套树
+
+[洛谷 P3380 【模板】二逼平衡树（树套树）](https://www.luogu.com.cn/problem/P3380)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int inf(INT_MAX);
+const int maxn(2e5 + 10);
+const int maxm(1e7 + 10);
+int idx, w[maxn];
+
+struct splayNode {
+    int val;
+    int cnt, siz;
+    int fa, ch[2];
+} splay[maxm];
+
+struct segNode {
+    int l, r, root;
+} segTree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' || ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' && ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int new_node(int val)
+{
+    ++idx;
+    splay[idx].val = val;
+    splay[idx].siz = splay[idx].cnt = 1;
+    return idx;
+}
+
+inline bool get_rel(int cur, int fa)
+{
+    return splay[fa].ch[1] == cur;
+}
+
+inline void push_up(int cur)
+{
+    splay[cur].siz = splay[splay[cur].ch[0]].siz + splay[splay[cur].ch[1]].siz + splay[cur].cnt;
+}
+
+inline void connect(int cur, int fa, bool rel)
+{
+    splay[cur].fa = fa;
+    splay[fa].ch[rel] = cur;
+}
+
+inline void rotate(int cur)
+{
+    int fa = splay[cur].fa;
+    int gf = splay[fa].fa;
+    bool rel = get_rel(cur, fa);
+    connect(splay[cur].ch[rel ^ 1], fa, rel);
+    connect(cur, gf, get_rel(fa, gf));
+    connect(fa, cur, rel ^ 1);
+    push_up(fa);
+    push_up(cur);
+}
+
+inline void splaying(int cur, int top, int& rt)
+{
+    while (splay[cur].fa not_eq top) {
+        int fa = splay[cur].fa;
+        int gf = splay[fa].fa;
+        if (gf not_eq top) {
+            get_rel(cur, fa) ^ get_rel(fa, gf) ? rotate(cur) : rotate(fa);
+        }
+        rotate(cur);
+    }
+    if (not top) rt = cur;
+}
+
+inline void insert(int val, int& rt)
+{
+    int cur = rt, fa = 0;
+    while (cur and splay[cur].val not_eq val) {
+        fa = cur;
+        cur = splay[cur].ch[val > splay[cur].val];
+    }
+    if (cur) {
+        ++splay[cur].cnt;
+        ++splay[cur].siz;
+    } else {
+        cur = new_node(val);
+        connect(cur, fa, val > splay[fa].val);
+    }
+    splaying(cur, 0, rt);
+}
+
+inline void remove(int val, int& rt)
+{
+    int cur = rt;
+    while (cur and splay[cur].val not_eq val) {
+        cur = splay[cur].ch[val > splay[cur].val];
+    }
+    splaying(cur, 0, rt);
+    if (cur) {
+        --splay[cur].cnt;
+        --splay[cur].siz;
+    } else {
+        int nxt = splay[cur].ch[1];
+        while (splay[nxt].ch[0]) {
+            nxt = splay[nxt].ch[0];
+        }
+        splaying(nxt, cur, rt);
+        connect(splay[cur].ch[0], nxt, false);
+        rt = nxt;
+        splay[rt].fa = 0;
+        push_up(rt);
+    }
+}
+
+inline int get_val(int rank, int& rt)
+{
+    int cur = rt;
+    while (cur) {
+        if (splay[splay[cur].ch[0]].siz >= rank) {
+            cur = splay[cur].ch[0];
+        } else if (splay[splay[cur].ch[0]].siz + splay[cur].cnt >= rank) {
+            splaying(cur, 0, rt);
+            break;
+        } else {
+            rank -= splay[splay[cur].ch[0]].siz + splay[cur].cnt;
+            cur = splay[cur].ch[1];
+        }
+    }
+    return splay[cur].val;
+}
+
+inline int get_rank(int val, int& rt)
+{
+    int cur = rt, rank = 0;
+    while (cur) {
+        if (splay[cur].val > val) {
+            cur = splay[cur].ch[0];
+        } else if (splay[cur].val < val) {
+            rank += splay[splay[cur].ch[0]].siz + splay[cur].cnt;
+            cur = splay[cur].ch[1];
+        } else {
+            rank += splay[splay[cur].ch[0]].siz;
+            splaying(cur, 0, rt);
+            break;
+        }
+    }
+    return rank;
+}
+
+inline int get_prev(int val, int& rt)
+{
+    return get_val(get_rank(val, rt), rt);
+}
+
+inline int get_next(int val, int& rt)
+{
+    return get_val(get_rank(val + 1, rt) + 1, rt);
+}
+
+inline int ls(int cur)
+{
+    return cur << 1;
+}
+
+inline int rs(int cur)
+{
+    return cur << 1 | 1;
+}
+
+void build(int cur, int l, int r)
+{
+    segTree[cur].l = l;
+    segTree[cur].r = r;
+    segTree[cur].root = new_node(-inf);
+    insert(inf, segTree[cur].root);
+    for (int i = l; i <= r; ++i) {
+        insert(w[i], segTree[cur].root);
+    }
+    if (l == r) return;
+    int mid = (l + r) >> 1;
+    build(ls(cur), l, mid);
+    build(rs(cur), mid + 1, r);
+}
+
+inline void update(int cur, int p, int v)
+{
+    remove(w[p], segTree[cur].root);
+    insert(v, segTree[cur].root);
+    if (segTree[cur].l == segTree[cur].r) return;
+    int mid = (segTree[cur].l + segTree[cur].r) >> 1;
+    if (p <= mid) {
+        update(ls(cur), p, v);
+    } else {
+        update(rs(cur), p, v);
+    }
+}
+
+inline int query_rank(int cur, int l, int r, int v)
+{
+    if (segTree[cur].l == l and segTree[cur].r == r) {
+        return get_rank(v, segTree[cur].root) - 1;
+    }
+    int mid = (segTree[cur].l + segTree[cur].r) >> 1;
+    if (r <= mid) {
+        return query_rank(ls(cur), l, r, v);
+    }
+    if (l > mid) {
+        return query_rank(rs(cur), l, r, v);
+    }
+    return query_rank(ls(cur), l, mid, v) + query_rank(rs(cur), mid + 1, r, v);
+}
+
+inline int query_val(int l, int r, int k)
+{
+    int low = 0, high = 1e8;
+    while (low < high) {
+        int mid = (low + high + 1) >> 1;
+        if (query_rank(1, l, r, mid) + 1 <= k) {
+            low = mid;
+        } else {
+            high = mid - 1;
+        }
+    }
+    return high;
+}
+
+inline int query_prev(int cur, int l, int r, int v)
+{
+    if (segTree[cur].l == l and segTree[cur].r == r) {
+        return get_prev(v, segTree[cur].root);
+    }
+    int mid = (segTree[cur].l + segTree[cur].r) >> 1;
+    if (r <= mid) {
+        return query_prev(ls(cur), l, r, v);
+    }
+    if (l > mid) {
+        return query_prev(rs(cur), l, r, v);
+    }
+    return max(query_prev(ls(cur), l, mid, v), query_prev(rs(cur), mid + 1, r, v));
+}
+
+inline int query_next(int cur, int l, int r, int v)
+{
+    if (segTree[cur].l == l and segTree[cur].r == r) {
+        return get_next(v, segTree[cur].root);
+    }
+    int mid = (segTree[cur].l + segTree[cur].r) >> 1;
+    if (r <= mid) {
+        return query_next(ls(cur), l, r, v);
+    }
+    if (l > mid) {
+        return query_next(rs(cur), l, r, v);
+    }
+    return min(query_next(ls(cur), l, mid, v), query_next(rs(cur), mid + 1, r, v));
+}
+
+int main()
+{
+#ifdef ONLINE_JUDGE
+#else
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read();
+    for (int i = 1; i <= n; ++i) {
+        w[i] = read();
+    }
+    build(1, 1, n);
+    while (m--) {
+        int op = read();
+        if (op == 1) {
+            int l = read(), r = read(), k = read();
+            write(query_rank(1, l, r, k) + 1, true);
+        } else if (op == 2) {
+            int l = read(), r = read(), k = read();
+            write(query_val(l, r, k), true);
+        } else if (op == 3) {
+            int p = read(), k = read();
+            update(1, p, k);
+            w[p] = k;
+        } else if (op == 4) {
+            int l = read(), r = read(), k = read();
+            write(query_prev(1, l, r, k), true);
+        } else {
+            int l = read(), r = read(), k = read();
+            write(query_next(1, l, r, k), true);
+        }
+    }
+    return 0;
+}
+```
+
