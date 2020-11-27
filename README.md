@@ -4189,11 +4189,11 @@ inline const T read()
 {
     T x = 0, f = 1;
     char ch = getchar();
-    while (ch < '0' || ch > '9') {
+    while (ch < '0' or ch > '9') {
         if (ch == '-') f = -1;
         ch = getchar();
     }
-    while (ch >= '0' && ch <= '9') {
+    while (ch >= '0' and ch <= '9') {
         x = (x << 3) + (x << 1) + ch - '0';
         ch = getchar();
     }
@@ -4216,7 +4216,7 @@ inline int new_node(int val)
 {
     ++idx;
     splay[idx].val = val;
-    splay[idx].siz = splay[idx].cnt = 1;
+    splay[idx].cnt = splay[idx].siz = 1;
     return idx;
 }
 
@@ -4225,15 +4225,15 @@ inline bool get_rel(int cur, int fa)
     return splay[fa].ch[1] == cur;
 }
 
+inline void connect(int cur, int fa, bool rel)
+{
+    splay[fa].ch[rel] = cur;
+    splay[cur].fa = fa;
+}
+
 inline void push_up(int cur)
 {
     splay[cur].siz = splay[splay[cur].ch[0]].siz + splay[splay[cur].ch[1]].siz + splay[cur].cnt;
-}
-
-inline void connect(int cur, int fa, bool rel)
-{
-    splay[cur].fa = fa;
-    splay[fa].ch[rel] = cur;
 }
 
 inline void rotate(int cur)
@@ -4241,9 +4241,9 @@ inline void rotate(int cur)
     int fa = splay[cur].fa;
     int gf = splay[fa].fa;
     bool rel = get_rel(cur, fa);
-    connect(splay[cur].ch[rel ^ 1], fa, rel);
+    connect(splay[cur].ch[rel xor 1], fa, rel);
     connect(cur, gf, get_rel(fa, gf));
-    connect(fa, cur, rel ^ 1);
+    connect(fa, cur, rel xor 1);
     push_up(fa);
     push_up(cur);
 }
@@ -4254,7 +4254,7 @@ inline void splaying(int cur, int top, int& rt)
         int fa = splay[cur].fa;
         int gf = splay[fa].fa;
         if (gf not_eq top) {
-            get_rel(cur, fa) ^ get_rel(fa, gf) ? rotate(cur) : rotate(fa);
+            get_rel(cur, fa) xor get_rel(fa, gf) ? rotate(cur) : rotate(fa);
         }
         rotate(cur);
     }
@@ -4285,10 +4285,10 @@ inline void remove(int val, int& rt)
         cur = splay[cur].ch[val > splay[cur].val];
     }
     splaying(cur, 0, rt);
-    if (cur) {
+    if (splay[cur].cnt > 1) {
         --splay[cur].cnt;
         --splay[cur].siz;
-    } else {
+    } else if (splay[cur].ch[1]) {
         int nxt = splay[cur].ch[1];
         while (splay[nxt].ch[0]) {
             nxt = splay[nxt].ch[0];
@@ -4296,9 +4296,31 @@ inline void remove(int val, int& rt)
         splaying(nxt, cur, rt);
         connect(splay[cur].ch[0], nxt, false);
         rt = nxt;
-        splay[rt].fa = 0;
+        splay[rt].fa = splay[cur].ch[1] = 0;
+        push_up(rt);
+    } else {
+        rt = splay[cur].ch[0];
+        splay[rt].fa = splay[cur].ch[0] = 0;
         push_up(rt);
     }
+}
+
+inline int get_rank(int val, int& rt)
+{
+    int cur = rt, rank = 0;
+    while (cur) {
+        if (val < splay[cur].val) {
+            cur = splay[cur].ch[0];
+        } else if (val > splay[cur].val) {
+            rank += splay[splay[cur].ch[0]].siz + splay[cur].cnt;
+            cur = splay[cur].ch[1];
+        } else {
+            rank += splay[splay[cur].ch[0]].siz;
+            splaying(cur, 0, rt);
+            break;
+        }
+    }
+    return rank;
 }
 
 inline int get_val(int rank, int& rt)
@@ -4318,24 +4340,6 @@ inline int get_val(int rank, int& rt)
     return splay[cur].val;
 }
 
-inline int get_rank(int val, int& rt)
-{
-    int cur = rt, rank = 0;
-    while (cur) {
-        if (splay[cur].val > val) {
-            cur = splay[cur].ch[0];
-        } else if (splay[cur].val < val) {
-            rank += splay[splay[cur].ch[0]].siz + splay[cur].cnt;
-            cur = splay[cur].ch[1];
-        } else {
-            rank += splay[splay[cur].ch[0]].siz;
-            splaying(cur, 0, rt);
-            break;
-        }
-    }
-    return rank;
-}
-
 inline int get_prev(int val, int& rt)
 {
     return get_val(get_rank(val, rt), rt);
@@ -4353,7 +4357,7 @@ inline int ls(int cur)
 
 inline int rs(int cur)
 {
-    return cur << 1 | 1;
+    return cur << 1 bitor 1;
 }
 
 void build(int cur, int l, int r)
@@ -4369,19 +4373,6 @@ void build(int cur, int l, int r)
     int mid = (l + r) >> 1;
     build(ls(cur), l, mid);
     build(rs(cur), mid + 1, r);
-}
-
-inline void update(int cur, int p, int v)
-{
-    remove(w[p], segTree[cur].root);
-    insert(v, segTree[cur].root);
-    if (segTree[cur].l == segTree[cur].r) return;
-    int mid = (segTree[cur].l + segTree[cur].r) >> 1;
-    if (p <= mid) {
-        update(ls(cur), p, v);
-    } else {
-        update(rs(cur), p, v);
-    }
 }
 
 inline int query_rank(int cur, int l, int r, int v)
@@ -4411,6 +4402,19 @@ inline int query_val(int l, int r, int k)
         }
     }
     return high;
+}
+
+inline void update(int cur, int p, int v)
+{
+    remove(w[p], segTree[cur].root);
+    insert(v, segTree[cur].root);
+    if (segTree[cur].l == segTree[cur].r) return;
+    int mid = (segTree[cur].l + segTree[cur].r) >> 1;
+    if (p <= mid) {
+        update(ls(cur), p, v);
+    } else {
+        update(rs(cur), p, v);
+    }
 }
 
 inline int query_prev(int cur, int l, int r, int v)
@@ -4477,4 +4481,3 @@ int main()
     return 0;
 }
 ```
-
