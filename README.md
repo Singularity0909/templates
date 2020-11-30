@@ -3234,7 +3234,7 @@ int main()
 }
 ```
 
-#### Treap
+#### 树堆（Treap）
 
 [洛谷 P3369 【模板】普通平衡树](https://www.luogu.com.cn/problem/P3369)
 
@@ -3449,7 +3449,7 @@ int main()
 }
 ```
 
-#### fhq Treap
+#### 无旋树堆（fhq Treap）
 
 [洛谷 P3369 【模板】普通平衡树](https://www.luogu.com.cn/problem/P3369)
 
@@ -3769,7 +3769,7 @@ int main()
 }
 ```
 
-#### Splay
+#### 伸展树（Splay）
 
 [洛谷 P3369 【模板】普通平衡树](https://www.luogu.com.cn/problem/P3369)
 
@@ -4731,4 +4731,3 @@ int main()
     return 0;
 }
 ```
-
