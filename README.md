@@ -4731,3 +4731,217 @@ int main()
     return 0;
 }
 ```
+
+#### 动态树（Link-Cut Tree）
+
+[洛谷 P3690 【模板】Link Cut Tree （动态树）](https://www.luogu.com.cn/problem/P3690)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e5 + 10);
+
+struct node {
+    int l, r;
+    int ch[2], fa;
+    int val, sum;
+    bool rev;
+} tree[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int& ls(int cur)
+{
+    return tree[cur].ch[0];
+}
+
+inline int& rs(int cur)
+{
+    return tree[cur].ch[1];
+}
+
+inline bool get_rel(int cur, int fa)
+{
+    return tree[fa].ch[1] == cur;
+}
+
+inline void connect(int cur, int fa, bool rel)
+{
+    tree[fa].ch[rel] = cur;
+    tree[cur].fa = fa;
+}
+
+inline bool is_root(int cur)
+{
+    return ls(tree[cur].fa) not_eq cur and rs(tree[cur].fa) not_eq cur;
+}
+
+inline void push_up(int cur)
+{
+    tree[cur].sum = tree[cur].val xor tree[ls(cur)].sum xor tree[rs(cur)].sum;
+}
+
+inline void reverse(int cur)
+{
+    swap(ls(cur), rs(cur));
+    tree[cur].rev xor_eq 1;
+}
+
+inline void push_down(int cur)
+{
+    if (tree[cur].rev) {
+        if (ls(cur)) {
+            reverse(ls(cur));
+        }
+        if (rs(cur)) {
+            reverse(rs(cur));
+        }
+        tree[cur].rev = false;
+    }
+}
+
+inline void rotate(int cur)
+{
+    int fa = tree[cur].fa;
+    int gf = tree[fa].fa;
+    bool rel = get_rel(cur, fa);
+    connect(tree[cur].ch[rel xor 1], fa, rel);
+    tree[cur].fa = gf;
+    if (not is_root(fa)) {
+        tree[gf].ch[get_rel(fa, gf)] = cur;
+    }
+    connect(fa, cur, rel xor 1);
+    push_up(fa);
+    push_up(cur);
+}
+
+inline void push_all(int cur)
+{
+    if (not is_root(cur)) {
+        push_all(tree[cur].fa);
+    }
+    push_down(cur);
+}
+
+inline void splaying(int cur)
+{
+    push_all(cur);
+    while (not is_root(cur)) {
+        int fa = tree[cur].fa;
+        int gf = tree[fa].fa;
+        if (not is_root(fa)) {
+            get_rel(cur, fa) xor get_rel(fa, gf) ? rotate(cur) : rotate(fa);
+        }
+        rotate(cur);
+    }
+}
+
+inline void access(int cur)
+{
+    for (int pre = 0; cur; cur = tree[cur].fa) {
+        splaying(cur);
+        rs(cur) = pre;
+        push_up(cur);
+        pre = cur;
+    }
+}
+
+inline void make_root(int cur)
+{
+    access(cur);
+    splaying(cur);
+    reverse(cur);
+}
+
+inline int find_root(int cur)
+{
+    access(cur);
+    splaying(cur);
+    while (ls(cur)) {
+        push_down(cur);
+        cur = ls(cur);
+    }
+    splaying(cur);
+    return cur;
+}
+
+inline void link(int u, int v)
+{
+    make_root(u);
+    if (find_root(v) not_eq u) {
+        tree[u].fa = v;
+    }
+}
+
+inline void cut(int u, int v)
+{
+    make_root(u);
+    if (find_root(v) == u and tree[v].fa == u and not ls(v)) {
+        rs(u) = tree[v].fa = 0;
+        push_up(u);
+    }
+}
+
+inline void split(int u, int v)
+{
+    make_root(u);
+    access(v);
+    splaying(v);
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read();
+    for (int i = 1; i <= n; ++i) {
+        tree[i].val = read();
+    }
+    while (m--) {
+        int op = read(), x = read(), y = read();
+        if (op == 0) {
+            split(x, y);
+            write(tree[y].sum, true);
+        } else if (op == 1) {
+            link(x, y);
+        } else if (op == 2) {
+            cut(x, y);
+        } else {
+            splaying(x);
+            tree[x].val = y;
+            push_up(x);
+        }
+    }
+    return 0;
+}
+```
