@@ -4819,12 +4819,8 @@ inline void reverse(int cur)
 inline void push_down(int cur)
 {
     if (tree[cur].rev) {
-        if (ls(cur)) {
-            reverse(ls(cur));
-        }
-        if (rs(cur)) {
-            reverse(rs(cur));
-        }
+        reverse(ls(cur));
+        reverse(rs(cur));
         tree[cur].rev = false;
     }
 }
