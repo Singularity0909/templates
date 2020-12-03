@@ -21,7 +21,6 @@ inline const T read()
     return x * f;
 }
 
-
 template<typename T>
 inline void write(T x, bool ln)
 {
