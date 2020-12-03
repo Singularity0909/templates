@@ -4732,6 +4732,168 @@ int main()
 }
 ```
 
+#### 点分治
+
+[洛谷 P3806 【模板】点分治1](https://www.luogu.com.cn/problem/P3806)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e4 + 10);
+const int maxm(1e2 + 10);
+const int maxk(2e7 + 10);
+int ecnt, head[maxn];
+int que[maxm], ans[maxn];
+int rt, tot, root[maxn], siz[maxn], maxp[maxn];
+int cnt, tmp[maxn], dis[maxn];
+bool vis[maxn], judge[maxk];
+
+struct edge {
+    int to, wt, nxt;
+} edges[maxn << 1];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline void addEdge(int u, int v, int w)
+{
+    edges[ecnt].to = v;
+    edges[ecnt].wt = w;
+    edges[ecnt].nxt = head[u];
+    head[u] = ecnt++;
+}
+
+void getRoot(int u, int f)
+{
+    siz[u] = 1;
+    maxp[u] = 0;
+    for (int i = head[u]; compl i; i = edges[i].nxt) {
+        int v = edges[i].to;
+        if (vis[v] or v == f) {
+            continue;
+        }
+        getRoot(v, u);
+        siz[u] += siz[v];
+        maxp[u] = max(maxp[u], siz[v]);
+    }
+    maxp[u] = max(maxp[u], tot - siz[u]);
+    if (maxp[u] < maxp[rt]) {
+        rt = u;
+    }
+}
+
+void getDis(int u, int f)
+{
+    tmp[cnt++] = dis[u];
+    for (int i = head[u]; compl i; i = edges[i].nxt) {
+        int v = edges[i].to, w = edges[i].wt;
+        if (vis[v] or v == f) {
+            continue;
+        }
+        dis[v] = dis[u] + w;
+        getDis(v, u);
+    }
+}
+
+void solve(int u, int m)
+{
+    static queue<int> q;
+    for (int i = head[u]; compl i; i = edges[i].nxt) {
+        int v = edges[i].to, w = edges[i].wt;
+        if (vis[v]) {
+            continue;
+        }
+        cnt = 0;
+        dis[v] = w;
+        getDis(v, u);
+        for (int j = 0; j < cnt; ++j) {
+            for (int k = 0; k < m; ++k) {
+                if (que[k] >= tmp[j]) {
+                    ans[k] or_eq judge[que[k] - tmp[j]];
+                }
+            }
+        }
+        for (int j = 0; j < cnt; ++j) {
+            q.push(tmp[j]);
+            judge[tmp[j]] = true;
+        }
+    }
+    while (not q.empty()) {
+        judge[q.front()] = false;
+        q.pop();
+    }
+}
+
+void divide(int u, int m)
+{
+    vis[u] = judge[0] = true;
+    solve(u, m);
+    for (int i = head[u]; compl i; i = edges[i].nxt) {
+        int v = edges[i].to;
+        if (vis[v]) {
+            continue;
+        }
+        maxp[rt = 0] = tot = siz[v];
+        getRoot(v, 0);
+        getRoot(rt, 0);
+        divide(rt, m);
+    }
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    memset(head, -1, sizeof head);
+    int n = read(), m = read();
+    for (int i = 0; i < n - 1; ++i) {
+        int u = read(), v = read(), w = read();
+        addEdge(u, v, w);
+        addEdge(v, u, w);
+    }
+    for (int i = 0; i < m; ++i) {
+        que[i] = read();
+    }
+    tot = maxp[0] = n;
+    getRoot(1, 0);
+    getRoot(rt, 0);
+    divide(rt, m);
+    for (int i = 0; i < m; ++i) {
+        puts(ans[i] ? "AYE" : "NAY");
+    }
+    return 0;
+}
+```
+
 #### 动态树（Link-Cut Tree）
 
 [洛谷 P3690 【模板】Link Cut Tree （动态树）](https://www.luogu.com.cn/problem/P3690)
