@@ -2406,6 +2406,131 @@ int main()
 }
 ```
 
+#### A* 算法
+
+[POJ 2449 Remmarguts' Date](http://poj.org/problem?id=2449)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e3 + 10);
+const int maxm(2e5 + 10);
+int ecnt, head[maxn], rhead[maxn];
+bool vis[maxn];
+int g[maxn];
+
+struct edge {
+    int to, wt, nxt;
+} edges[maxm];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline void addEdge(int u, int v, int w, bool r)
+{
+    edges[ecnt].to = v;
+    edges[ecnt].wt = w;
+    if (r) {
+        edges[ecnt].nxt = rhead[u];
+        rhead[u] = ecnt++;
+    } else {
+        edges[ecnt].nxt = head[u];
+        head[u] = ecnt++;
+    }
+}
+
+void dijkstra(int src)
+{
+    memset(g, 0x3f, sizeof g);
+    g[src] = 0;
+    priority_queue<p, vector<p>, greater<p>> q;
+    q.push(p(0, src));
+    while (not q.empty()) {
+        int u = q.top().second;
+        q.pop();
+        if (vis[u]) continue;
+        vis[u] = true;
+        for (int i = rhead[u]; compl i; i = edges[i].nxt) {
+            int v = edges[i].to, w = edges[i].wt;
+            if (g[v] > g[u] + w) {
+                g[v] = g[u] + w;
+                q.push(p(g[v], v));
+            }
+        }
+    }
+}
+
+int astar(int src, int des, int k)
+{
+    if (src == des) ++k;
+    auto cmp = [&](const p& a, const p& b) {
+        return a.second + g[a.first] > b.second + g[b.first];
+    };
+    priority_queue<p, vector<p>, decltype(cmp)> q(cmp);
+    q.push(p(src, 0));
+    int cnt = 0;
+    while (not q.empty()) {
+        int u = q.top().first, d = q.top().second;
+        q.pop();
+        if (u == des and ++cnt == k) {
+            return d;
+        }
+        for (int i = head[u]; compl i; i = edges[i].nxt) {
+            int v = edges[i].to, w = edges[i].wt;
+            q.push(p(v, d + w));
+        }
+    }
+    return -1;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    memset(head, -1, sizeof head);
+    memset(rhead, -1, sizeof rhead);
+    int n = read(), m = read();
+    while (m--) {
+        int u = read(), v = read(), w = read();
+        addEdge(u, v, w, false);
+        addEdge(v, u, w, true);
+    }
+    int s = read(), t = read(), k = read();
+    dijkstra(t);
+    write(astar(s, t, k), true);
+    return 0;
+}
+```
+
 ## 数据结构
 
 #### 线段树
