@@ -2531,6 +2531,240 @@ int main()
 }
 ```
 
+#### EK 算法
+
+[洛谷 P3376 【模板】网络最大流](https://www.luogu.com.cn/problem/P3376)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int inf(0x3f3f3f3f);
+const int maxn(1e3 + 10);
+const int maxm(2e4 + 10);
+int ecnt, head[maxn];
+int mn[maxn], pre[maxn];
+bool vis[maxn];
+
+struct edge {
+    int to, flow, nxt;
+} edges[maxm];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline void addEdge(int u, int v, int w)
+{
+    edges[ecnt].to = v;
+    edges[ecnt].flow = w;
+    edges[ecnt].nxt = head[u];
+    head[u] = ecnt++;
+}
+
+bool bfs(int src, int des)
+{
+    queue<int> q;
+    memset(vis, false, sizeof vis);
+    q.push(src);
+    vis[src] = true;
+    mn[src] = inf;
+    while (not q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (int i = head[u]; compl i; i = edges[i].nxt) {
+            int v = edges[i].to, w = edges[i].flow;
+            if (not vis[v] and w) {
+                vis[v] = true;
+                mn[v] = min(mn[u], w);
+                pre[v] = i;
+                if (v == des) {
+                    return true;
+                }
+                q.push(v);
+            }
+        }
+    }
+    return false;
+}
+
+ll ek(int src, int des)
+{
+    ll res = 0;
+    while (bfs(src, des)) {
+        res += mn[des];
+        for (int i = des; i not_eq src; i = edges[pre[i] xor 1].to) {
+            edges[pre[i]].flow -= mn[des];
+            edges[pre[i] xor 1].flow += des;
+        }
+    }
+    return res;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    memset(head, -1, sizeof head);
+    int n = read(), m = read(), s = read(), t = read();
+    while (m--) {
+        int u = read(), v = read(), w = read();
+        addEdge(u, v, w);
+        addEdge(v, u, 0);
+    }
+    write(ek(s, t), true);
+    return 0;
+}
+```
+
+#### Dinic 算法
+
+[洛谷 P3376 【模板】网络最大流](https://www.luogu.com.cn/problem/P3376)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int inf(0x3f3f3f3f);
+const int maxn(1e4 + 10);
+const int maxm(2e5 + 10);
+int ecnt, head[maxn];
+int dep[maxn], cur[maxn];
+
+struct edge {
+    int to, flow, nxt;
+} edges[maxm];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline void addEdge(int u, int v, int w)
+{
+    edges[ecnt].to = v;
+    edges[ecnt].flow = w;
+    edges[ecnt].nxt = head[u];
+    head[u] = ecnt++;
+}
+
+bool bfs(int src, int des)
+{
+    queue<int> q;
+    memset(dep, -1, sizeof(dep));
+    dep[src] = 0;
+    q.push(src);
+    while (not q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (int i = head[u]; compl i; i = edges[i].nxt) {
+            int v = edges[i].to, w = edges[i].flow;
+            if (dep[v] == -1 and w) {
+                q.push(v);
+                dep[v] = dep[u] + 1;
+            }
+        }
+    }
+    return compl dep[des];
+}
+
+int dfs(int u, int des, int rflow)
+{
+    if (u == des) return rflow;
+    int res = 0;
+    for (int i = cur[u]; compl i and rflow; i = edges[i].nxt) {
+        int v = edges[i].to;
+        if (dep[v] not_eq dep[u] + 1 or not edges[i].flow) continue;
+        cur[u] = i;
+        int flow = dfs(v, des, min(edges[i].flow, rflow));
+        edges[i].flow -= flow;
+        edges[i xor 1].flow += flow;
+        rflow -= flow;
+        res += flow;
+    }
+    if (not res) dep[u] = -1;
+    return res;
+}
+
+ll dinic(int src, int des)
+{
+    ll res = 0;
+    while (bfs(src, des)) {
+        memcpy(cur, head, sizeof(head));
+        res += dfs(src, des, inf);
+    }
+    return res;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read(), s = read(), t = read();
+    memset(head, -1, sizeof(head));
+    while (m--) {
+        int u = read(), v = read(), w = read();
+        addEdge(u, v, w);
+        addEdge(v, u, 0);
+    }
+    write(dinic(s, t), true);
+    return 0;
+}
+```
+
 ## 数据结构
 
 #### 线段树
