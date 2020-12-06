@@ -1450,6 +1450,209 @@ int main()
 }
 ```
 
+#### Kruskal 算法
+
+[洛谷 P3366 【模板】最小生成树](https://www.luogu.com.cn/problem/P3366)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(5e3 + 10);
+const int maxm(2e5 + 10);
+int pre[maxn];
+
+struct edge {
+    int u, v, w;
+} edges[maxm];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline int Find(int cur)
+{
+    return pre[cur] == cur ? cur : pre[cur] = Find(pre[cur]);
+}
+
+inline void Union(int u, int v)
+{
+    pre[Find(v)] = Find(u);
+}
+
+int kruskal(int n, int m)
+{
+    int sum = 0, cnt = 0;
+    for (int i = 0; i < m and cnt < n - 1; ++i) {
+        int u = edges[i].u, v = edges[i].v, w = edges[i].w;
+        if (Find(u) not_eq Find(v)) {
+            Union(u, v);
+            ++cnt;
+            sum += w;
+        }
+    }
+    return cnt == n - 1 ? sum : -1;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read(), m = read();
+    for (int i = 1; i <= n; ++i) {
+        pre[i] = i;
+    }
+    for (int i = 0; i < m; ++i) {
+        edges[i].u = read();
+        edges[i].v = read();
+        edges[i].w = read();
+    }
+    sort(edges, edges + m, [&](const edge& a, const edge& b) {
+        return a.w < b.w;
+    });
+    int res = kruskal(n, m);
+    if (compl res) {
+        write(res, true);
+    } else {
+        puts("orz");
+    }
+    return 0;
+}
+```
+
+#### Prim 算法
+
+[洛谷 P3366 【模板】最小生成树](https://www.luogu.com.cn/problem/P3366)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int inf(0x3f3f3f3f);
+const int maxn(5e3 + 10);
+const int maxm(4e5 + 10);
+int ecnt, head[maxn];
+int dis[maxn];
+bool vis[maxn];
+
+struct edge {
+    int to, wt, nxt;
+} edges[maxm];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+inline void addEdge(int u, int v, int w)
+{
+    edges[ecnt].to = v;
+    edges[ecnt].wt = w;
+    edges[ecnt].nxt = head[u];
+    head[u] = ecnt++;
+}
+
+int prim(int n, int m)
+{
+    memset(dis, 0x3f, sizeof dis);
+    dis[1] = 0;
+    priority_queue<p, vector<p>, greater<p>> q;
+    for (int i = 1; i <= n; ++i) {
+        q.push(p(dis[i], i));
+    }
+    int sum = 0;
+    while (not q.empty()) {
+        int u = q.top().second;
+        q.pop();
+        if (vis[u]) continue;
+        vis[u] = true;
+        if (dis[u] == inf) return -1;
+        sum += dis[u];
+        for (int i = head[u]; compl i; i = edges[i].nxt) {
+            int v = edges[i].to, w = edges[i].wt;
+            if (dis[v] > w) {
+                dis[v] = w;
+                q.push(p(dis[v], v));
+            }
+        }
+    }
+    return sum;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    memset(head, -1, sizeof head);
+    int n = read(), m = read();
+    while (m--) {
+        int u = read(), v = read(), w = read();
+        addEdge(u, v, w);
+        addEdge(v, u, w);
+    }
+    int res = prim(n, m);
+    if (compl res) {
+        write(res, true);
+    } else {
+        puts("orz");
+    }
+    return 0;
+}
+```
+
 #### 倍增
 
 [洛谷 P3379 【模板】最近公共祖先（LCA）](https://www.luogu.com.cn/problem/P3379)
