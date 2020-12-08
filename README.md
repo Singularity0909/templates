@@ -620,53 +620,91 @@ ll qpow(ll x, ll k)
 }
 ```
 
-###### 矩阵快速幂
+#### 矩阵快速幂
+
+[洛谷 P3390 【模板】矩阵快速幂](https://www.luogu.com.cn/problem/P3390)
 
 ```cpp
-template<typename T>
-struct matrix {
-    vector<vector<T>> vec;
+#include <bits/stdc++.h>
 
-    matrix(int n, int m, T v = 0)
-    {
-        vec.resize(n, vector<T>(m, v));
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int mod(1e9 + 7);
+const int maxn(1e2 + 10);
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
     }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
 
-    // identity matrix
-    matrix(int n)
+template<typename T>
+inline void write(T x, char c)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (c) putchar(c);
+}
+
+struct matrix {
+    int n;
+    ll val[maxn][maxn];
+    
+    matrix(vector<vector<int>> vec)
     {
-        vec.resize(n, vector<T>(n, 0));
-        for (int i = 0; i < n; i++) {
-            vec[i][i] = 1;
+        assert(vec.size() == vec.front().size());
+        this->n = (int)vec.size();
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                val[i][j] = vec[i][j];
+            }
         }
     }
-
-    matrix(vector<vector<T>> vec)
+    
+    matrix(int n, bool id = false)
     {
-        this->vec = vec;
+        this->n = n;
+        memset(val, 0, sizeof val);
+        if (not id) return;
+        // identity matrix
+        for (int i = 0; i < n; ++i) {
+            val[i][i] = id;
+        }
     }
-
-    matrix operator *(matrix& x)
-    {
-        int n = (int)this->vec.size();
-        int m = (int)x.vec.size();
-        matrix res(n, m);
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
-                for (int k = 0; k < m; k++) {
-                    res.vec[i][j] = (res.vec[i][j] + this->vec[i][k] * x.vec[k][j] % mod) % mod;
+    
+    matrix operator *(const matrix& rhs) {
+        assert(n == rhs.n);
+        matrix res(n);
+        for (int i = 0; i < n; ++i) {
+            for (int j = 0; j < n; ++j) {
+                for (int k = 0; k < n; ++k) {
+                    res.val[i][j] = (res.val[i][j] + val[i][k] * rhs.val[k][j] % mod) % mod;
                 }
             }
         }
         return res;
-    }
-
-    matrix operator ^(T k)
+    };
+    
+    matrix operator ^(ll k)
     {
-        int n = (int)this->vec.size();
-        matrix x = *this, res(n);
+        matrix res(n, true), x = *this;
         while (k) {
-            if (k & 1) {
+            if (k bitand 1) {
                 res = res * x;
             }
             x = x * x;
@@ -675,6 +713,28 @@ struct matrix {
         return res;
     }
 };
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read();
+    ll k = read<ll>();
+    matrix mat(n);
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            mat.val[i][j] = read();
+        }
+    }
+    mat = mat ^ k;
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < n; ++j) {
+            write(mat.val[i][j], j == n - 1 ? '\n' : ' ');
+        }
+    }
+    return 0;
+}
 ```
 
 #### 筛法
@@ -837,8 +897,9 @@ $i^{-1} \equiv -(\frac{p}{i}) (p \bmod i)^{-1}$；
 
 ```cpp
 inv[i] = 1;
-for (int i = 2; i <= n; i++)
+for (int i = 2; i <= n; i++) {
     inv[i] = (ll)(p - p / i) * inv[p % i] % p;
+}
 ```
 
 #### 组合数
