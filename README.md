@@ -246,8 +246,9 @@ void kmp(char* s, char* p)
 
 #### Manacher 算法
 
+[LeetCode 5 Longest Palindromic Substring](https://leetcode-cn.com/problems/longest-palindromic-substring/)
+
 ```cpp
-// LeetCode 5. Longest Palindromic Substring
 class Solution {
 public:
     string longestPalindrome(string s)
@@ -282,8 +283,9 @@ public:
 };
 ```
 
+[洛谷 P3805 【模板】manacher算法](https://www.luogu.com.cn/problem/P3805)
+
 ```cpp
-// 洛谷 P3805 【模板】manacher算法
 #include <bits/stdc++.h>
 
 using namespace std;
@@ -327,6 +329,246 @@ int main()
         res = max(res, mp[i] - 1);
     }
     printf("%d\n", res);
+    return 0;
+}
+```
+
+#### AC 自动机
+
+[洛谷 P3808 【模板】AC自动机（简单版）](https://www.luogu.com.cn/problem/P3808)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(1e6 + 10);
+char s[maxn];
+int idx, trie[maxn][26];
+int ext[maxn], fail[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+void insert(char* str)
+{
+    int u = 0;
+    for (int i = 0; str[i]; ++i) {
+        int c = str[i] - 'a';
+        if (not trie[u][c]) {
+            trie[u][c] = ++idx;
+        }
+        u = trie[u][c];
+    }
+    ++ext[u];
+}
+
+void build()
+{
+    queue<int> q;
+    for (int i = 0; i < 26; ++i) {
+        if (trie[0][i]) {
+            q.push(trie[0][i]);
+        }
+    }
+    while (not q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (int i = 0; i < 26; ++i) {
+            int& v = trie[u][i];
+            if (v) {
+                fail[v] = trie[fail[u]][i];
+                q.push(v);
+            } else {
+                v = trie[fail[u]][i];
+            }
+        }
+    }
+}
+
+int query(char* str)
+{
+    int u = 0, res = 0;
+    for (int i = 0; str[i]; ++i) {
+        int c = str[i] - 'a';
+        u = trie[u][c];
+        for (int j = u; j and compl ext[j]; j = fail[j]) {
+            res += ext[j];
+            ext[j] = -1;
+        }
+    }
+    return res;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    int n = read();
+    for (int i = 0; i < n; ++i) {
+        scanf("%s", s);
+        insert(s);
+    }
+    build();
+    scanf("%s", s);
+    write(query(s), true);
+    return 0;
+}
+```
+
+[洛谷 P3796 【模板】AC自动机（加强版）](https://www.luogu.com.cn/problem/P3796)
+
+```cpp
+#include <bits/stdc++.h>
+
+using namespace std;
+using ll = long long;
+using p = pair<int, int>;
+const int maxn(160);
+const int maxl(1e6 + 10);
+const int maxs(maxn * 80);
+char s[maxn][maxn], t[maxl];
+int tot, trie[maxs][26];
+int idx[maxs], fail[maxs], cnt[maxn];
+
+template<typename T = int>
+inline const T read()
+{
+    T x = 0, f = 1;
+    char ch = getchar();
+    while (ch < '0' or ch > '9') {
+        if (ch == '-') f = -1;
+        ch = getchar();
+    }
+    while (ch >= '0' and ch <= '9') {
+        x = (x << 3) + (x << 1) + ch - '0';
+        ch = getchar();
+    }
+    return x * f;
+}
+
+template<typename T>
+inline void write(T x, bool ln)
+{
+    if (x < 0) {
+        putchar('-');
+        x = -x;
+    }
+    if (x > 9) write(x / 10, false);
+    putchar(x % 10 + '0');
+    if (ln) putchar(10);
+}
+
+void init()
+{
+    tot = 0;
+    memset(trie, 0, sizeof(trie));
+    memset(fail, 0, sizeof(fail));
+    memset(idx, 0, sizeof idx);
+    memset(cnt, 0, sizeof cnt);
+}
+
+void insert(char* str, int id)
+{
+    int u = 0;
+    for (int i = 1; str[i]; ++i) {
+        int c = str[i] - 'a';
+        if (not trie[u][c]) {
+            trie[u][c] = ++tot;
+        }
+        u = trie[u][c];
+    }
+    idx[u] = id;
+}
+
+void build()
+{
+    queue<int> q;
+    for (int i = 0; i < 26; ++i) {
+        if (trie[0][i]) {
+            q.push(trie[0][i]);
+        }
+    }
+    while (not q.empty()) {
+        int u = q.front();
+        q.pop();
+        for (int i = 0; i < 26; ++i) {
+            int& v = trie[u][i];
+            if (v) {
+                fail[v] = trie[fail[u]][i];
+                q.push(v);
+            } else {
+                v = trie[fail[u]][i];
+            }
+        }
+    }
+}
+
+int query(char* str, int n)
+{
+    int u = 0, res = 0;
+    for (int i = 1; str[i]; ++i) {
+        int c = str[i] - 'a';
+        u = trie[u][c];
+        for (int j = u; j; j = fail[j]) {
+            ++cnt[idx[j]];
+        }
+    }
+    for (int i = 1; i <= n; ++i) {
+        res = max(res, cnt[i]);
+    }
+    return res;
+}
+
+int main()
+{
+#ifndef ONLINE_JUDGE
+    freopen("input.txt", "r", stdin);
+#endif
+    int n;
+    while (compl scanf("%d", bitand n) and n) {
+        init();
+        for (int i = 1; i <= n; ++i) {
+            scanf("%s", s[i] + 1);
+            insert(s[i], i);
+        }
+        build();
+        scanf("%s", t + 1);
+        int res = query(t, n);
+        write(res, true);
+        for (int i = 1; i <= n; ++i) {
+            if (cnt[i] == res) {
+                puts(s[i] + 1);
+            }
+        }
+    }
     return 0;
 }
 ```
